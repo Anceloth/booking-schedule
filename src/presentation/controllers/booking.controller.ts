@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Body,
   Param,
   HttpStatus,
@@ -10,6 +11,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { CreateBookingUseCase } from '../../application/use-cases/create-booking.use-case';
+import { CancelBookingUseCase } from '../../application/use-cases/cancel-booking.use-case';
 import {
   CreateBookingDto,
   UpdateBookingDto,
@@ -23,6 +25,7 @@ import { REPOSITORY_TOKENS } from '../../shared/constants/app.constants';
 export class BookingController {
   constructor(
     private readonly createBookingUseCase: CreateBookingUseCase,
+    private readonly cancelBookingUseCase: CancelBookingUseCase,
     @Inject(REPOSITORY_TOKENS.BOOKING_REPOSITORY)
     private readonly bookingRepository: BookingRepository,
   ) {}
@@ -36,7 +39,7 @@ export class BookingController {
       return this.toResponseDto(booking);
     } catch (error) {
       throw new HttpException(
-        error.message || 'Failed to create booking',
+        (error as Error).message ?? 'Failed to create booking',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -49,7 +52,7 @@ export class BookingController {
       return bookings.map((booking) => this.toResponseDto(booking));
     } catch (error) {
       throw new HttpException(
-        'Failed to retrieve bookings',
+        (error as Error).message ?? 'Failed to retrieve bookings',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -84,7 +87,23 @@ export class BookingController {
       return this.toResponseDto(booking);
     } catch (error) {
       throw new HttpException(
-        error.message || 'Failed to update booking',
+        (error as Error).message ?? 'Failed to update booking',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Patch(':id/cancel')
+  async cancelBooking(@Param('id') id: string): Promise<BookingResponseDto> {
+    try {
+      const booking = await this.cancelBookingUseCase.execute(id);
+      return this.toResponseDto(booking);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        (error as Error).message ?? 'Failed to cancel booking',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -99,6 +118,7 @@ export class BookingController {
       endDate: booking.endDate,
       organizerId: booking.organizerId,
       participants: booking.participants,
+      status: booking.status,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
     };

@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { BookingRepository } from '../../../domain/repositories/booking.repository';
-import { Booking } from '../../../domain/entities/booking.entity';
+import {
+  Booking,
+  BookingStatus,
+} from '../../../domain/entities/booking.entity';
 import { PrismaService } from '../prisma.service';
 import { Booking as PrismaBooking } from '@prisma/client';
 
@@ -36,10 +39,7 @@ export class PrismaBookingRepository implements BookingRepository {
   async findByDateRange(startDate: Date, endDate: Date): Promise<Booking[]> {
     const bookings = await this.prisma.booking.findMany({
       where: {
-        AND: [
-          { startDate: { gte: startDate } },
-          { endDate: { lte: endDate } },
-        ],
+        AND: [{ startDate: { gte: startDate } }, { endDate: { lte: endDate } }],
       },
     });
     return bookings.map((booking) => this.toDomain(booking));
@@ -55,6 +55,7 @@ export class PrismaBookingRepository implements BookingRepository {
         endDate: booking.endDate,
         organizerId: booking.organizerId,
         participants: booking.participants,
+        status: booking.status,
       },
     });
     return this.toDomain(savedBooking);
@@ -72,6 +73,16 @@ export class PrismaBookingRepository implements BookingRepository {
       },
     });
     return this.toDomain(updatedBooking);
+  }
+
+  async cancel(id: string): Promise<Booking> {
+    const cancelledBooking = await this.prisma.booking.update({
+      where: { id },
+      data: {
+        status: 'CANCELLED',
+      },
+    });
+    return this.toDomain(cancelledBooking);
   }
 
   async findAll(): Promise<Booking[]> {
@@ -92,6 +103,7 @@ export class PrismaBookingRepository implements BookingRepository {
       prismaBooking.endDate,
       prismaBooking.organizerId,
       prismaBooking.participants,
+      prismaBooking.status as BookingStatus,
       prismaBooking.createdAt,
       prismaBooking.updatedAt,
     );

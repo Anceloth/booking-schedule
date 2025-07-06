@@ -7,5 +7,6 @@ export interface BookingRepository {
   findByDateRange(startDate: Date, endDate: Date): Promise<Booking[]>;
   save(booking: Booking): Promise<Booking>;
   update(id: string, booking: Partial<Booking>): Promise<Booking>;
+  cancel(id: string): Promise<Booking>;
   findAll(): Promise<Booking[]>;
 }

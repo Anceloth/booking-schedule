@@ -10,6 +10,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -29,10 +34,11 @@ model Booking {
   description  String
   startDate    DateTime @map("start_date")
   endDate      DateTime @map("end_date")
-  organizerId  String   @map("organizer_id")
+  organizerId  String        @map("organizer_id")
   participants String[]
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  status       BookingStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   // Relations
   organizer User @relation("BookingOrganizer", fields: [organizerId], references: [id])

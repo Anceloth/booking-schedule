@@ -1,4 +1,6 @@
 import { IsString, IsDate, IsUUID, IsArray, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { BookingStatus } from '../../domain/entities/booking.entity';
 
 export class CreateBookingDto {
   @IsString()
@@ -8,9 +10,11 @@ export class CreateBookingDto {
   description: string;
 
   @IsDate()
+  @Transform(({ value }) => new Date(value as string))
   startDate: Date;
 
   @IsDate()
+  @Transform(({ value }) => new Date(value as string))
   endDate: Date;
 
   @IsUUID()
@@ -32,10 +36,12 @@ export class UpdateBookingDto {
 
   @IsDate()
   @IsOptional()
+  @Transform(({ value }) => (value ? new Date(value as string) : undefined))
   startDate?: Date;
 
   @IsDate()
   @IsOptional()
+  @Transform(({ value }) => (value ? new Date(value as string) : undefined))
   endDate?: Date;
 
   @IsArray()
@@ -51,6 +57,7 @@ export class BookingResponseDto {
   endDate: Date;
   organizerId: string;
   participants: string[];
+  status: BookingStatus;
   createdAt: Date;
   updatedAt: Date;
 }
