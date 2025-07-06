@@ -48,11 +48,16 @@ Ambas colecciones incluyen las siguientes variables:
 - **PUT** `/bookings/:id` - Actualiza una reserva existente
 - Ejemplo con cambios en título, descripción, horario y participantes
 
-### 5. Crear Booking - Ejemplo Completo
+### 5. Cancelar Reserva
+- **PATCH** `/bookings/:id/cancel` - Cancela una reserva existente
+- La reserva no se elimina, solo cambia su estado a 'cancelled'
+- No requiere body en la request
+
+### 6. Crear Booking - Ejemplo Completo
 - **POST** `/bookings` - Ejemplo completo con todos los usuarios de prueba
 - Incluye todos los UUIDs de usuarios creados por los seeders
 
-### 6. Crear Booking - Solo Organizador
+### 7. Crear Booking - Solo Organizador
 - **POST** `/bookings` - Ejemplo de booking sin participantes
 - Útil para probar reservas individuales
 
@@ -75,7 +80,8 @@ Developer User: 63a928fb-d69c-4925-9985-27a5fbdbd2e4
 2. **Crear Booking** - Crea una nueva reserva
 3. **Obtener Reserva por ID** - Verifica la reserva creada (actualiza `bookingId` con el ID real)
 4. **Actualizar Reserva** - Modifica la reserva
-5. **Obtener Todas las Reservas** - Confirma los cambios
+5. **Cancelar Reserva** - Cancela la reserva (prueba el nuevo endpoint)
+6. **Obtener Todas las Reservas** - Confirma los cambios y estados
 
 ## 📊 Respuestas Esperadas
 
@@ -89,10 +95,13 @@ Developer User: 63a928fb-d69c-4925-9985-27a5fbdbd2e4
   "endDate": "2025-07-08T10:00:00.000Z",
   "organizerId": "uuid-del-organizador",
   "participants": ["uuid-participante-1", "uuid-participante-2"],
+  "status": "active",
   "createdAt": "2025-07-06T12:00:00.000Z",
   "updatedAt": "2025-07-06T12:00:00.000Z"
 }
 ```
+
+> **Nota**: El campo `status` puede ser 'active' o 'cancelled'. Las reservas nuevas siempre inician como 'active'.
 
 ### Error Response
 ```json

@@ -81,6 +81,20 @@
       "response": []
     },
     {
+      "name": "Cancelar Reserva",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/bookings/{{bookingId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["bookings", "{{bookingId}}", "cancel"]
+        },
+        "description": "Cancelar una reserva existente. La reserva no se elimina, solo se cambia su estado a 'cancelled'."
+      },
+      "response": []
+    },
+    {
       "name": "Crear Booking - Ejemplo Completo",
       "request": {
         "method": "POST",
