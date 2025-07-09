@@ -5,8 +5,15 @@ import { PrismaBookingRepository } from './infrastructure/database/repositories/
 import { PrismaUserRepository } from './infrastructure/database/repositories/user.repository';
 import { CreateBookingUseCase } from './application/use-cases/create-booking.use-case';
 import { CancelBookingUseCase } from './application/use-cases/cancel-booking.use-case';
+import { ConflictVerificationService } from './domain/services/conflict-verification.service';
+import { GoogleCalendarService } from './infrastructure/external/google-calendar.service';
 import { BookingController } from './presentation/controllers/booking.controller';
-import { REPOSITORY_TOKENS } from './shared/constants/app.constants';
+import { AuthController } from './presentation/controllers/auth.controller';
+import { DiagnosticsController } from './presentation/controllers/diagnostics.controller';
+import {
+  REPOSITORY_TOKENS,
+  SERVICE_TOKENS,
+} from './shared/constants/app.constants';
 
 @Module({
   imports: [
@@ -15,13 +22,21 @@ import { REPOSITORY_TOKENS } from './shared/constants/app.constants';
       envFilePath: ['.env.local', '.env'],
     }),
   ],
-  controllers: [BookingController],
+  controllers: [BookingController, AuthController, DiagnosticsController],
   providers: [
     // Database
     PrismaService,
     // Use Cases
     CreateBookingUseCase,
     CancelBookingUseCase,
+    // Domain Services
+    ConflictVerificationService,
+    // External Services
+    GoogleCalendarService,
+    {
+      provide: SERVICE_TOKENS.CALENDAR_SERVICE,
+      useClass: GoogleCalendarService,
+    },
     // Repositories
     {
       provide: REPOSITORY_TOKENS.BOOKING_REPOSITORY,

@@ -7,6 +7,57 @@
   },
   "item": [
     {
+      "name": "🔐 Autenticación OAuth 2.0",
+      "item": [
+        {
+          "name": "Iniciar Autorización Google",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            },
+            "description": "Inicia el flujo OAuth 2.0 con Google Calendar. Te redirigirá a Google para autorizar el acceso a tu calendario."
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de Autenticación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "status"]
+            },
+            "description": "Verifica el estado actual de la autenticación con Google Calendar."
+          },
+          "response": []
+        },
+        {
+          "name": "Probar Conexión Google Calendar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bookings/test-calendar",
+              "host": ["{{baseUrl}}"],
+              "path": ["bookings", "test-calendar"]
+            },
+            "description": "Prueba la conexión con Google Calendar y obtiene eventos de ejemplo."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints para manejar la autenticación OAuth 2.0 con Google Calendar"
+    },
+    {
+      "name": "📅 Gestión de Reservas",
+      "item": [
+        {
       "name": "Crear Booking",
       "request": {
         "method": "POST",
@@ -139,6 +190,8 @@
         "description": "Ejemplo de booking solo con organizador, sin participantes"
       },
       "response": []
+    }
+      ]
     }
   ],
   "variable": [

@@ -3,6 +3,10 @@ export const REPOSITORY_TOKENS = {
   USER_REPOSITORY: 'UserRepository',
 } as const;
 
+export const SERVICE_TOKENS = {
+  CALENDAR_SERVICE: 'CalendarService',
+} as const;
+
 export const DATABASE_CONSTANTS = {
   DEFAULT_PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,

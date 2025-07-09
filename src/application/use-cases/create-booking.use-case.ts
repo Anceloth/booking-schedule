@@ -3,6 +3,7 @@ import { BookingRepository } from '../../domain/repositories/booking.repository'
 import { Booking } from '../../domain/entities/booking.entity';
 import { CreateBookingDto } from '../dtos/booking.dto';
 import { BookingDomainService } from '../../domain/services/booking-domain.service';
+import { ConflictVerificationService } from '../../domain/services/conflict-verification.service';
 import { UserRepository } from '../../domain/repositories/user.repository';
 import { REPOSITORY_TOKENS } from '../../shared/constants/app.constants';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +15,7 @@ export class CreateBookingUseCase {
     private readonly bookingRepository: BookingRepository,
     @Inject(REPOSITORY_TOKENS.USER_REPOSITORY)
     private readonly userRepository: UserRepository,
+    private readonly conflictVerificationService: ConflictVerificationService,
   ) {}
 
   async execute(createBookingDto: CreateBookingDto): Promise<Booking> {
@@ -56,6 +58,13 @@ export class CreateBookingUseCase {
       }
 
       BookingDomainService.validateParticipants(validParticipants);
+
+      // Verificar conflictos de calendario para los participantes
+      await this.conflictVerificationService.verifyNoConflicts(
+        createBookingDto.participants,
+        createBookingDto.startDate,
+        createBookingDto.endDate,
+      );
     }
 
     // Guardar la reserva

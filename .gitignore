@@ -59,3 +59,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # API Collections - Keep these files for testing
 # collections/ folder is intentionally NOT ignored
+
+/xtra-config

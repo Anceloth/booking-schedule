@@ -6,6 +6,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   HttpStatus,
   HttpException,
   Inject,
@@ -15,10 +16,12 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
-  ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { CreateBookingUseCase } from '../../application/use-cases/create-booking.use-case';
 import { CancelBookingUseCase } from '../../application/use-cases/cancel-booking.use-case';
+import { CalendarConflictException } from '../../domain/exceptions/calendar-conflict.exception';
+import { ConflictVerificationService } from '../../domain/services/conflict-verification.service';
 import {
   CreateBookingDto,
   UpdateBookingDto,
@@ -34,6 +37,7 @@ export class BookingController {
   constructor(
     private readonly createBookingUseCase: CreateBookingUseCase,
     private readonly cancelBookingUseCase: CancelBookingUseCase,
+    private readonly conflictVerificationService: ConflictVerificationService,
     @Inject(REPOSITORY_TOKENS.BOOKING_REPOSITORY)
     private readonly bookingRepository: BookingRepository,
   ) {}
@@ -49,6 +53,10 @@ export class BookingController {
     status: 400,
     description: 'Datos de entrada inválidos',
   })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflicto de calendario detectado',
+  })
   async createBooking(
     @Body() createBookingDto: CreateBookingDto,
   ): Promise<BookingResponseDto> {
@@ -56,6 +64,9 @@ export class BookingController {
       const booking = await this.createBookingUseCase.execute(createBookingDto);
       return this.toResponseDto(booking);
     } catch (error) {
+      if (error instanceof CalendarConflictException) {
+        throw new HttpException(error.message, HttpStatus.CONFLICT);
+      }
       throw new HttpException(
         (error as Error).message ?? 'Failed to create booking',
         HttpStatus.BAD_REQUEST,
@@ -182,6 +193,125 @@ export class BookingController {
       throw new HttpException(
         (error as Error).message ?? 'Failed to cancel booking',
         HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Get('availability')
+  @ApiOperation({ summary: 'Verificar disponibilidad de participantes' })
+  @ApiQuery({
+    name: 'participantIds',
+    description: 'IDs de participantes separados por comas',
+    example: 'participant1,participant2,participant3',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    description: 'Fecha de inicio en formato ISO',
+    example: '2025-07-10T10:00:00.000Z',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    description: 'Fecha de fin en formato ISO',
+    example: '2025-07-10T11:00:00.000Z',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Información de disponibilidad de participantes',
+    schema: {
+      type: 'object',
+      properties: {
+        available: {
+          type: 'boolean',
+          description: 'Si todos los participantes están disponibles',
+        },
+        conflicts: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              participantId: { type: 'string' },
+              email: { type: 'string' },
+              conflictingEvents: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    start: { type: 'string', format: 'date-time' },
+                    end: { type: 'string', format: 'date-time' },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Parámetros de consulta inválidos',
+  })
+  async checkAvailability(
+    @Query('participantIds') participantIds: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    try {
+      if (!participantIds || !startDate || !endDate) {
+        throw new HttpException(
+          'participantIds, startDate, and endDate are required',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const participants = participantIds.split(',').map((id) => id.trim());
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new HttpException(
+          'Invalid date format. Use ISO format (YYYY-MM-DDTHH:mm:ss.sssZ)',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const availability =
+        await this.conflictVerificationService.getParticipantAvailability(
+          participants,
+          start,
+          end,
+        );
+
+      const conflicts: Array<{
+        participantId: string;
+        email: string;
+        conflictingEvents: any[];
+      }> = [];
+      let allAvailable = true;
+
+      for (const [participantId, info] of availability.entries()) {
+        if (info.conflicts.length > 0) {
+          allAvailable = false;
+          conflicts.push({
+            participantId,
+            email: info.email,
+            conflictingEvents: info.conflicts,
+          });
+        }
+      }
+
+      return {
+        available: allAvailable,
+        conflicts,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Failed to check availability',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
